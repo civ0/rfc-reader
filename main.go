@@ -1,25 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"github.com/civ0/rfc-reader/cache"
+	"github.com/civ0/rfc-reader/index"
+	"github.com/civ0/rfc-reader/ui"
+	"github.com/civ0/rfc-reader/util"
 )
 
 func main() {
-	// Setup logging
-	logFile, err := os.OpenFile("rfc-reader.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	err := cache.UpdateCache()
 	if err != nil {
-		log.Fatalf("Failed to open logfile: %v", err)
+		util.FatalExit(err)
 	}
-	defer logFile.Close()
-
-	log.SetOutput(logFile)
-
-	_ = UpdateCache()
-	index, _ := ReadIndex()
-	for i, rfcEntry := range index.RFCEntries {
-		fmt.Println(i, ": ", rfcEntry.DocID, " ", rfcEntry.Title, " ", rfcEntry.CanonicalName(), " ", rfcEntry.DocID)
-		ReadRFC(rfcEntry.CanonicalName())
-	}
+	rfcIndex, _ := index.ReadIndex()
+	ui.Run(rfcIndex)
 }
