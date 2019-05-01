@@ -11,6 +11,14 @@ import (
 const XMLIndexURL = "https://www.rfc-editor.org/in-notes/rfc-index.xml"
 const RFCBaseURL = "https://www.rfc-editor.org/rfc/"
 
+type RFCLocalCopyStatus int
+
+const (
+	RFCLocalCopyStatusAbsent RFCLocalCopyStatus = iota
+	RFCLocalCopyStatusPresent
+	RFCLocalCopyStatusUnknown
+)
+
 func GetAppCacheDir() string {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
@@ -60,13 +68,22 @@ func GetRFCFilePath(canonicalName string) string {
 	return rfcFilePath
 }
 
-func RFCPresent(canonicalName string) (bool, error) {
+func RFCPresent(canonicalName string) (RFCLocalCopyStatus, error) {
+	res := RFCLocalCopyStatusUnknown
+
 	rfcFilePath := GetRFCFilePath(canonicalName)
 	exists, err := util.FileExists(rfcFilePath)
 	if err != nil {
 		err = errors.Wrapf(err, "Failed to check if RFC %s is present", canonicalName)
 	}
-	return exists, err
+
+	if exists == true {
+		res = RFCLocalCopyStatusPresent
+	} else {
+		res = RFCLocalCopyStatusAbsent
+	}
+
+	return res, err
 }
 
 func ReadRFC(canonicalName string) (rfc string, err error) {
@@ -77,12 +94,12 @@ func ReadRFC(canonicalName string) (rfc string, err error) {
 		}
 	}()
 
-	exists, err := RFCPresent(canonicalName)
+	localCopyStatus, err := RFCPresent(canonicalName)
 	if err != nil {
 		panic(errors.WithStack(err))
 	}
 
-	if exists == false {
+	if localCopyStatus != RFCLocalCopyStatusPresent {
 		err = DownloadRFC(canonicalName)
 		if err != nil {
 			panic(errors.WithStack(err))

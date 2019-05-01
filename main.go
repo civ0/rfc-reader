@@ -13,5 +13,5 @@ func main() {
 		util.FatalExit(err)
 	}
 	rfcIndex, _ := index.ReadIndex()
-	ui.Run(rfcIndex)
+	ui.Run(&rfcIndex)
 }
