@@ -1,11 +1,13 @@
 package ui
 
 import (
+	"fmt"
 	"github.com/civ0/rfc-reader/cache"
 	"github.com/civ0/rfc-reader/index"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	"strings"
+	"unicode"
 )
 
 func getPages(rfc string) []string {
@@ -44,6 +46,12 @@ func Run(index *index.RFCIndex) {
 	app := tview.NewApplication()
 	rfcTable, _ := RFCTable(index)
 
+	helpText := tview.NewTextView()
+	helpText.SetDynamicColors(true)
+	helpText.SetRegions(true)
+	fmt.Fprintf(helpText, `["rg"]Q[""]uit`)
+	helpText.Highlight("rg")
+
 	statusText := tview.NewTextView()
 	statusText.SetText("Status")
 
@@ -81,8 +89,20 @@ func Run(index *index.RFCIndex) {
 	contentFlex.AddItem(selectionFlex, 0, 1, true)
 	contentFlex.AddItem(rfcText, 0, 3, false)
 
+	flex.AddItem(helpText, 1, 0, false)
 	flex.AddItem(contentFlex, 0, 1, true)
 	flex.AddItem(statusText, 1, 0, false)
+
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyRune {
+			r := unicode.ToLower(event.Rune())
+			if r == rune('q') {
+				app.Stop()
+			}
+		}
+
+		return event
+	})
 
 	if tviewErr := app.SetRoot(flex, true).Run(); tviewErr != nil {
 		panic(tviewErr)
