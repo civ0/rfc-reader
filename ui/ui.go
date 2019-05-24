@@ -49,7 +49,7 @@ func Run(index *index.RFCIndex) {
 	helpText := tview.NewTextView()
 	helpText.SetDynamicColors(true)
 	helpText.SetRegions(true)
-	fmt.Fprintf(helpText, `["rg"]Q[""]uit`)
+	fmt.Fprintf(helpText, `["rg"]Q[""]uit  ["rg"]TAB[""] to switch focus`)
 	helpText.Highlight("rg")
 
 	statusText := tview.NewTextView()
@@ -98,6 +98,13 @@ func Run(index *index.RFCIndex) {
 			r := unicode.ToLower(event.Rune())
 			if r == rune('q') {
 				app.Stop()
+			}
+		} else if event.Key() == tcell.KeyTAB {
+			// switch focus between table and text
+			if rfcTable.HasFocus() {
+				app.SetFocus(rfcText)
+			} else {
+				app.SetFocus(rfcTable)
 			}
 		}
 
